@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Master Pro - Vương Quốc Ô Chữ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .game-card-container {
+            display: flex;
+            height: calc(100vh - 300px);
+            min-height: 550px;
+            overflow: hidden;
+        }
+
+        .side-panel {
+            flex: 0 0 350px;
+            overflow-y: auto;
+            border-right: 2px solid rgba(59, 130, 246, 0.1);
+            padding-right: 1.5rem;
+        }
+
+        .grid-panel {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-left: 1.5rem;
+        }
+
+        .crossword-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 2px solid #bfdbfe;
+            border-radius: 12px;
+            transition: all 0.2s;
+            background: white;
+            color: #1e40af;
+        }
+
+        .crossword-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .crossword-input.correct {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+            color: #065f46;
+        }
+
+        .crossword-input.wrong {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+
+        .question-item {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+        }
+
+        .question-item.active {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .question-content { display: none; }
+        .active .question-content { display: block; }
+        .active .question-placeholder { display: none; }
+
+        .row-container.active-row {
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 16px;
+        }
+
+        .set-card {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .set-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 10px; }
+
+        @media (max-width: 1024px) {
+            .game-card-container { flex-direction: column; height: auto; overflow: visible; }
+            .side-panel { flex: none; width: 100%; border-right: none; border-bottom: 2px solid rgba(59, 130, 246, 0.1); padding-right: 0; padding-bottom: 1.5rem; }
+            .grid-panel { padding-left: 0; padding-top: 1.5rem; }
+        }
+
+        .animate-pop {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="app" class="max-w-7xl mx-auto flex flex-col h-full w-full">
+        
+        <!-- HEADER -->
+        <header id="app-header" class="text-center mb-8">
+            <h1 class="text-4xl md:text-6xl font-bold text-blue-700 drop-shadow-sm">
+                <i class="fas fa-magic mr-2"></i>Toán Học Kỳ Thú
+            </h1>
+            <p class="text-blue-500 font-semibold mt-2 text-lg">Math Master Pro - Thử thách & Vinh quang</p>
+        </header>
+
+        <!-- MÀN HÌNH SETUP -->
+        <section id="setup-screen" class="glass-morphism p-8 max-w-5xl mx-auto w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Cấu hình Nhóm -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-users text-blue-500"></i> Thiết lập Nhóm (Tùy chọn)
+                    </h3>
+                    <textarea id="group-input" 
+                        class="w-full h-40 p-4 border-2 border-blue-100 rounded-2xl focus:border-blue-400 focus:outline-none text-gray-700 font-medium"
+                        placeholder="Nhập tên các nhóm (mỗi nhóm 1 dòng)...&#10;Ví dụ:&#10;Nhóm Siêu Nhân&#10;Nhóm Thông Thái"></textarea>
+                    <p class="text-xs text-gray-400">Nếu bỏ trống, học sinh sẽ chơi trực tiếp.</p>
+                </div>
+
+                <!-- Cấu hình Bộ câu hỏi -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-blue-500"></i> Các Bộ Câu Hỏi
+                    </h3>
+                    <div id="sets-container" class="space-y-4 max-h-80 overflow-y-auto p-1">
+                        <!-- Dynamic sets go here -->
+                        <div class="set-input-block p-4 bg-white rounded-2xl border-2 border-blue-50 relative">
+                            <input type="text" class="set-title w-full font-bold text-blue-600 mb-2 border-b border-dashed outline-none" value="Bộ câu hỏi số 1">
+                            <textarea class="set-questions w-full h-32 p-2 text-sm border-none focus:ring-0 outline-none" placeholder="Câu hỏi | Đáp án..."></textarea>
+                        </div>
+                    </div>
+                    <button onclick="addNewSetInput()" class="w-full py-2 border-2 border-dashed border-blue-300 rounded-xl text-blue-500 font-bold hover:bg-blue-50 transition">
+                        + Thêm bộ câu hỏi mới
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-10 flex justify-center">
+                <button onclick="initApp()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-20 rounded-2xl shadow-lg transform transition active:scale-95 text-2xl">
+                    LƯU & BẮT ĐẦU 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- MÀN HÌNH CHỌN NHÓM & BỘ (PICKER) -->
+        <section id="picker-screen" class="hidden glass-morphism p-12 max-w-4xl mx-auto w-full text-center animate-pop">
+            <div id="group-picker-zone" class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Lựa chọn nhóm may mắn</h2>
+                <div id="group-display" class="text-4xl font-black text-blue-600 h-20 flex items-center justify-center bg-blue-50 rounded-3xl border-4 border-dashed border-blue-200 mb-6">
+                    Đang chờ...
+                </div>
+                <button id="btn-random-group" onclick="pickRandomGroup()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-10 rounded-full shadow-lg transition">
+                    CHỌN NGẪU NHIÊN NHÓM 🎲
+                </button>
+            </div>
+
+            <div id="set-picker-zone" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2">
+                    <span id="chosen-group-name" class="text-blue-600"></span> - Chọn bộ câu hỏi muốn giải:
+                </h2>
+                <div id="set-list-display" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Set cards render here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MÀN HÌNH TRÒ CHƠI -->
+        <section id="game-screen" class="hidden flex flex-col w-full animate-pop">
+            <div class="flex justify-between items-center mb-4 px-4">
+                <div class="bg-white/60 px-6 py-2 rounded-full border border-blue-100 flex items-center gap-3">
+                    <span class="text-blue-700 font-black" id="active-group-tag">Học sinh</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-blue-500 font-bold" id="active-set-tag">Bộ số 1</span>
+                </div>
+                <button onclick="confirmExit()" class="bg-red-50 text-red-600 px-6 py-2 rounded-full font-bold hover:bg-red-100 transition border border-red-100 shadow-sm">
+                    <i class="fas fa-sign-out-alt mr-1"></i> Thoát
+                </button>
+            </div>
+
+            <div class="glass-morphism p-6 md:p-10">
+                <div class="game-card-container">
+                    <div class="side-panel">
+                        <h3 class="text-xl font-bold text-blue-800 mb-4 flex items-center gap-2 border-b border-blue-50 pb-2">
+                            <i class="fas fa-list-ol"></i> Câu hỏi
+                        </h3>
+                        <ul id="question-list" class="space-y-4"></ul>
+                    </div>
+
+                    <div class="grid-panel">
+                        <h3 class="text-xl font-bold text-blue-800 mb-4 self-start flex items-center gap-2 border-b border-blue-50 pb-2 w-full">
+                            <i class="fas fa-th"></i> Khung ô chữ
+                        </h3>
+                        <div id="grid-container" class="space-y-4 w-full flex flex-col items-center py-6"></div>
+
+                        <div class="mt-auto pt-6">
+                            <button onclick="checkFinalResult()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-16 rounded-2xl shadow-lg transition-all transform hover:scale-105 text-2xl">
+                                HOÀN THÀNH <i class="fas fa-check-circle ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÀN HÌNH KẾT QUẢ -->
+        <section id="result-screen" class="hidden glass-morphism p-12 text-center max-w-3xl mx-auto w-full mt-6 shadow-2xl animate-pop">
+            <div id="result-icon" class="text-9xl mb-8 text-yellow-500">
+                <i class="fas fa-crown animate-bounce"></i>
+            </div>
+            <h2 id="result-title" class="text-4xl font-bold text-gray-800 mb-3 font-black tracking-tight">Tuyệt đỉnh thông thái!</h2>
+            <p id="result-message" class="text-gray-600 mb-10 text-xl font-medium leading-relaxed"></p>
+            
+            <div id="group-victory-tag" class="hidden mb-6 py-2 px-6 bg-yellow-100 text-yellow-700 rounded-full font-bold text-lg inline-block border border-yellow-200">
+                CHÚC MỪNG: <span id="victory-group-name"></span>
+            </div>
+
+            <div class="max-w-sm mx-auto mb-10">
+                <div class="bg-blue-50 p-8 rounded-3xl border-2 border-blue-100 shadow-inner">
+                    <p class="text-base text-blue-500 font-bold uppercase tracking-widest mb-2">Kết quả bài làm</p>
+                    <p id="final-score" class="text-6xl font-black text-blue-700">0</p>
+                </div>
+            </div>
+
+            <button onclick="restartApp()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-16 rounded-2xl transition transform hover:scale-105 shadow-lg text-xl">
+                <i class="fas fa-redo mr-3"></i> LÀM LẠI TỪ ĐẦU
+            </button>
+        </section>
+
+        <!-- FOOTER -->
+        <footer id="app-footer" class="py-10 text-center mt-auto">
+            <p class="text-blue-800 font-bold opacity-80 text-xl tracking-wide">
+                <i class="fas fa-copyright mr-2"></i> Bản quyền thuộc về Nhật Huy
+            </p>
+        </footer>
+
+    </div>
+
+    <script>
+        // --- State ---
+        let groups = [];
+        let allSets = [];
+        let selectedGroup = null;
+        let selectedSet = null;
+        let activeGameData = [];
+
+        // --- Setup Logic ---
+        function addNewSetInput() {
+            const container = document.getElementById('sets-container');
+            const count = container.querySelectorAll('.set-input-block').length + 1;
+            const div = document.createElement('div');
+            div.className = 'set-input-block p-4 bg-white rounded-2xl border-2 border-blue-50 relative animate-pop';
+            div.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-300 hover:text-red-500"><i class="fas fa-times-circle"></i></button>
+                <input type="text" class="set-title w-full font-bold text-blue-600 mb-2 border-b border-dashed outline-none" value="Bộ câu hỏi số ${count}">
+                <textarea class="set-questions w-full h-32 p-2 text-sm border-none focus:ring-0 outline-none" placeholder="Câu hỏi | Đáp án..."></textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        function initApp() {
+            // Parse Groups
+            const gText = document.getElementById('group-input').value.trim();
+            groups = gText ? gText.split('\n').map(s => s.trim()).filter(s => s) : [];
+
+            // Parse Sets
+            const setBlocks = document.querySelectorAll('.set-input-block');
+            allSets = [];
+            setBlocks.forEach(block => {
+                const title = block.querySelector('.set-title').value.trim();
+                const content = block.querySelector('.set-questions').value.trim();
+                const questions = [];
+                content.split('\n').forEach((line, idx) => {
+                    const parts = line.split('|').map(s => s.trim());
+                    if (parts.length >= 2) {
+                        questions.push({ id: idx + 1, question: parts[0], answer: parts[1].toUpperCase().replace(/\s/g, ''), soundPlayed: false });
+                    }
+                });
+                if (questions.length > 0) {
+                    allSets.push({ title, questions });
+                }
+            });
+
+            if (allSets.length === 0) {
+                return Swal.fire('Lỗi', 'Vui lòng nhập ít nhất một bộ câu hỏi hợp lệ.', 'error');
+            }
+
+            // Move to Picker Screen
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('picker-screen').classList.remove('hidden');
+
+            if (groups.length > 0) {
+                document.getElementById('group-picker-zone').classList.remove('hidden');
+                document.getElementById('set-picker-zone').classList.add('hidden');
+            } else {
+                selectedGroup = null;
+                showSetSelection();
+            }
+        }
+
+        // --- Picker Logic ---
+        function pickRandomGroup() {
+            const display = document.getElementById('group-display');
+            const btn = document.getElementById('btn-random-group');
+            btn.disabled = true;
+            
+            let counter = 0;
+            const interval = setInterval(() => {
+                display.innerText = groups[counter % groups.length];
+                counter++;
+                if (counter > 20) {
+                    clearInterval(interval);
+                    const winnerIndex = Math.floor(Math.random() * groups.length);
+                    selectedGroup = groups[winnerIndex];
+                    display.innerText = selectedGroup;
+                    display.classList.add('border-blue-500', 'bg-blue-100', 'animate-bounce');
+                    
+                    setTimeout(() => {
+                        showSetSelection();
+                    }, 1500);
+                }
+            }, 100);
+        }
+
+        function showSetSelection() {
+            document.getElementById('group-picker-zone').classList.add('hidden');
+            document.getElementById('set-picker-zone').classList.remove('hidden');
+            
+            if (selectedGroup) {
+                document.getElementById('chosen-group-name').innerText = "Chúc mừng " + selectedGroup;
+            } else {
+                document.getElementById('chosen-group-name').innerText = "Chọn thử thách của bạn";
+            }
+
+            const listDisplay = document.getElementById('set-list-display');
+            listDisplay.innerHTML = '';
+            
+            allSets.forEach((set, idx) => {
+                const card = document.createElement('div');
+                card.className = 'set-card glass-morphism p-6 text-center border-2 border-transparent';
+                card.innerHTML = `
+                    <div class="text-3xl text-blue-500 mb-2"><i class="fas fa-folder-open"></i></div>
+                    <h4 class="font-bold text-gray-800">${set.title}</h4>
+                    <p class="text-xs text-gray-400 mt-1">${set.questions.length} câu hỏi</p>
+                `;
+                card.onclick = () => launchGame(idx);
+                listDisplay.appendChild(card);
+            });
+        }
+
+        // --- Game Logic ---
+        function launchGame(setIndex) {
+            selectedSet = allSets[setIndex];
+            activeGameData = JSON.parse(JSON.stringify(selectedSet.questions)); // Deep copy
+
+            document.getElementById('picker-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            document.getElementById('active-group-tag').innerText = selectedGroup || "Học sinh";
+            document.getElementById('active-set-tag').innerText = selectedSet.title;
+
+            renderGameLayout();
+        }
+
+        function renderGameLayout() {
+            const qList = document.getElementById('question-list');
+            const gridContainer = document.getElementById('grid-container');
+            qList.innerHTML = '';
+            gridContainer.innerHTML = '';
+
+            activeGameData.forEach((item, rIdx) => {
+                // Sidebar
+                const li = document.createElement('li');
+                li.id = `q-item-${rIdx}`;
+                li.className = 'question-item p-4 rounded-2xl bg-white border border-blue-50 shadow-sm';
+                li.onclick = () => setActiveRow(rIdx, true);
+                li.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="bg-blue-500 text-white font-black w-7 h-7 rounded-xl flex items-center justify-center shrink-0 text-sm">${item.id}</span>
+                        <div class="flex-1 overflow-hidden pt-1">
+                            <span class="question-placeholder text-blue-300 italic text-sm font-semibold"><i class="fas fa-eye-slash mr-1"></i> Xem câu hỏi</span>
+                            <p class="question-content text-blue-900 font-bold text-sm leading-relaxed">${item.question}</p>
+                        </div>
+                    </div>
+                `;
+                qList.appendChild(li);
+
+                // Grid
+                const row = document.createElement('div');
+                row.id = `row-${rIdx}`;
+                row.className = 'row-container flex items-center gap-3 w-full justify-center p-3 transition-all cursor-pointer';
+                row.onclick = (e) => { if (e.target.tagName !== 'INPUT') setActiveRow(rIdx, true); };
+                
+                const label = document.createElement('span');
+                label.className = 'w-6 text-xs font-black text-blue-200';
+                label.innerText = item.id;
+                row.appendChild(label);
+                
+                const cells = document.createElement('div');
+                cells.className = 'flex gap-2';
+
+                for (let cIdx = 0; cIdx < item.answer.length; cIdx++) {
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.className = 'crossword-input';
+                    input.id = `cell-${rIdx}-${cIdx}`;
+                    input.onfocus = () => setActiveRow(rIdx, false);
+                    input.addEventListener('input', (e) => {
+                        const val = e.target.value.toUpperCase();
+                        e.target.value = val;
+                        if (val) {
+                            const next = document.getElementById(`cell-${rIdx}-${cIdx + 1}`);
+                            if (next) next.focus();
+                        }
+                        checkRowRealtime(rIdx);
+                    });
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && !e.target.value) {
+                            const prev = document.getElementById(`cell-${rIdx}-${cIdx - 1}`);
+                            if (prev) prev.focus();
+                        }
+                    });
+                    cells.appendChild(input);
+                }
+                row.appendChild(cells);
+                gridContainer.appendChild(row);
+            });
+        }
+
+        function setActiveRow(index, shouldFocusFirst = false) {
+            document.querySelectorAll('.question-item').forEach(el => el.classList.remove('active'));
+            const qEl = document.getElementById(`q-item-${index}`);
+            if (qEl) qEl.classList.add('active');
+
+            document.querySelectorAll('.row-container').forEach(el => el.classList.remove('active-row'));
+            const rowEl = document.getElementById(`row-${index}`);
+            if (rowEl) rowEl.classList.add('active-row');
+            
+            if (shouldFocusFirst) {
+                const firstInput = document.getElementById(`cell-${index}-0`);
+                if (firstInput) firstInput.focus();
+            }
+        }
+
+        function checkRowRealtime(rIdx) {
+            const item = activeGameData[rIdx];
+            let current = '';
+            let filledCount = 0;
+            for (let c = 0; c < item.answer.length; c++) {
+                const val = document.getElementById(`cell-${rIdx}-${c}`).value;
+                current += val;
+                if (val) filledCount++;
+            }
+            if (filledCount === item.answer.length) {
+                const isCorrect = current === item.answer;
+                for (let c = 0; c < item.answer.length; c++) {
+                    const el = document.getElementById(`cell-${rIdx}-${c}`);
+                    el.classList.remove('correct', 'wrong');
+                    el.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+            } else {
+                for (let c = 0; c < item.answer.length; c++) {
+                    const el = document.getElementById(`cell-${rIdx}-${c}`);
+                    el.classList.remove('correct', 'wrong');
+                }
+            }
+        }
+
+        function checkFinalResult() {
+            let totalCorrect = 0;
+            activeGameData.forEach((item, rIdx) => {
+                let current = '';
+                for (let c = 0; c < item.answer.length; c++) {
+                    current += document.getElementById(`cell-${rIdx}-${c}`).value;
+                }
+                if (current === item.answer) totalCorrect++;
+            });
+            showResult(totalCorrect, activeGameData.length);
+        }
+
+        function showResult(score, total) {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('app-header').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score}/${total}`;
+
+            const title = document.getElementById('result-title');
+            const msg = document.getElementById('result-message');
+            const icon = document.getElementById('result-icon');
+            const victoryTag = document.getElementById('group-victory-tag');
+
+            if (selectedGroup) {
+                victoryTag.classList.remove('hidden');
+                document.getElementById('victory-group-name').innerText = selectedGroup;
+            }
+
+            if (score === total) {
+                title.innerText = "Tuyệt đỉnh thông thái!";
+                msg.innerText = "Nhóm đã chinh phục vương quốc toán học thành công!";
+                icon.innerHTML = '<i class="fas fa-crown animate-bounce"></i>';
+                icon.className = "text-9xl mb-8 text-yellow-500";
+                confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+            } else {
+                title.innerText = "Hoàn thành thử thách!";
+                msg.innerText = "Hãy ôn tập thêm để đạt kết quả cao hơn vào lần tới nhé.";
+                icon.innerHTML = '<i class="fas fa-medal"></i>';
+                icon.className = "text-9xl mb-8 text-blue-400";
+            }
+        }
+
+        function confirmExit() {
+            Swal.fire({
+                title: 'Thoát bài làm?',
+                text: "Tiến trình của bạn sẽ bị mất!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Thoát',
+                cancelButtonText: 'Ở lại'
+            }).then((result) => {
+                if (result.isConfirmed) restartApp();
+            });
+        }
+
+        function restartApp() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toán Học Kỳ Thú - Math Master Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+        }
+
+        .game-card-container {
+            display: flex;
+            height: calc(100vh - 300px);
+            min-height: 600px;
+            overflow: hidden;
+        }
+
+        .side-panel {
+            flex: 0 0 350px;
+            overflow-y: auto;
+            border-right: 2px solid rgba(59, 130, 246, 0.1);
+            padding-right: 1.5rem;
+        }
+
+        .grid-panel {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding-left: 1.5rem;
+        }
+
+        .drag-item {
+            cursor: grab;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid #dbeafe;
+        }
+        .drag-item:active { cursor: grabbing; transform: scale(1.05); }
+
+        .drop-zone {
+            transition: all 0.3s ease;
+            min-height: 120px;
+            border: 3px dashed #bfdbfe;
+            border-radius: 20px;
+        }
+
+        .drop-zone.drag-over {
+            background-color: #fef08a !important;
+            border-color: #facc15 !important;
+            transform: scale(1.02);
+        }
+
+        .drop-zone.wrong {
+            background-color: #fee2e2 !important;
+            border-color: #ef4444 !important;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .set-card {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .set-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+
+        .animate-pop {
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 10px; }
+
+        @media (max-width: 1024px) {
+            .game-card-container { flex-direction: column; height: auto; overflow: visible; }
+            .side-panel { flex: none; width: 100%; border-right: none; border-bottom: 2px solid rgba(59, 130, 246, 0.1); padding-right: 0; padding-bottom: 1.5rem; }
+            .grid-panel { padding-left: 0; padding-top: 1.5rem; }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="app" class="max-w-7xl mx-auto flex flex-col h-full w-full">
+        
+        <!-- HEADER -->
+        <header id="app-header" class="text-center mb-8">
+            <h1 class="text-4xl md:text-6xl font-bold text-blue-700 drop-shadow-sm">
+                <i class="fas fa-magic mr-2"></i>Toán Học Kỳ Thú
+            </h1>
+            <p class="text-blue-500 font-semibold mt-2 text-lg">Học Tập Vui Vẻ - Kiến Thức Vững Vàng</p>
+        </header>
+
+        <!-- MÀN HÌNH SETUP -->
+        <section id="setup-screen" class="glass-morphism p-8 max-w-5xl mx-auto w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Cấu hình Nhóm -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-users text-blue-500"></i> Thiết lập Nhóm (Tùy chọn)
+                    </h3>
+                    <textarea id="group-input" 
+                        class="w-full h-40 p-4 border-2 border-blue-100 rounded-2xl focus:border-blue-400 focus:outline-none text-gray-700 font-medium"
+                        placeholder="Nhập tên các nhóm (mỗi nhóm 1 dòng)...&#10;Ví dụ:&#10;Nhóm Siêu Nhân&#10;Nhóm Thông Thái"></textarea>
+                    <p class="text-xs text-gray-400">Hệ thống sẽ chọn ngẫu nhiên nhóm thực hiện thử thách.</p>
+                </div>
+
+                <!-- Cấu hình Bộ câu hỏi -->
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-blue-500"></i> Các Bộ Câu Hỏi
+                    </h3>
+                    <div id="sets-container" class="space-y-4 max-h-80 overflow-y-auto p-1">
+                        <!-- Dynamic sets go here -->
+                        <div class="set-input-block p-4 bg-white rounded-2xl border-2 border-blue-50 relative">
+                            <input type="text" class="set-title w-full font-bold text-blue-600 mb-2 border-b border-dashed outline-none" value="Bộ câu hỏi cơ bản">
+                            <textarea class="set-questions w-full h-32 p-2 text-sm border-none focus:ring-0 outline-none" placeholder="Câu hỏi | Đáp án..."></textarea>
+                        </div>
+                    </div>
+                    <button onclick="addNewSetInput()" class="w-full py-2 border-2 border-dashed border-blue-300 rounded-xl text-blue-500 font-bold hover:bg-blue-50 transition">
+                        + Thêm bộ câu hỏi mới
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-10 flex justify-center">
+                <button onclick="initApp()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-20 rounded-2xl shadow-lg transform transition active:scale-95 text-2xl uppercase tracking-widest">
+                    LƯU & BẮT ĐẦU 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- MÀN HÌNH PICKER (CHỌN NHÓM & BỘ) -->
+        <section id="picker-screen" class="hidden glass-morphism p-12 max-w-4xl mx-auto w-full text-center animate-pop">
+            <div id="group-picker-zone" class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Lựa chọn nhóm may mắn</h2>
+                <div id="group-display" class="text-4xl font-black text-blue-600 h-24 flex items-center justify-center bg-blue-50 rounded-3xl border-4 border-dashed border-blue-200 mb-6">
+                    Đang chờ...
+                </div>
+                <button id="btn-random-group" onclick="pickRandomGroup()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-4 px-12 rounded-full shadow-lg transition transform active:scale-95">
+                    CHỌN NGẪU NHIÊN NHÓM 🎲
+                </button>
+            </div>
+
+            <div id="set-picker-zone" class="hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-2">
+                    Nhóm <span id="chosen-group-name" class="text-blue-600"></span> hãy chọn bộ câu hỏi:
+                </h2>
+                <div id="set-list-display" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Set cards render here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- MÀN HÌNH TRÒ CHƠI -->
+        <section id="game-screen" class="hidden flex flex-col w-full animate-pop">
+            <div class="flex justify-between items-center mb-4 px-4">
+                <div class="bg-white/60 px-6 py-2 rounded-full border border-blue-100 flex items-center gap-3">
+                    <span class="text-blue-700 font-black" id="active-group-tag">Học sinh</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-blue-500 font-bold" id="active-set-tag">Bộ số 1</span>
+                    <span class="text-gray-300">|</span>
+                    <span class="text-green-600 font-bold"><i class="fas fa-star mr-1"></i> <span id="score-display">0</span>/<span id="total-display">0</span></span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="toggle-sound" class="bg-white p-2 w-10 h-10 rounded-full hover:bg-gray-200 transition border border-gray-200 shadow-sm flex items-center justify-center">
+                        <i class="fas fa-volume-up text-blue-500"></i>
+                    </button>
+                    <button onclick="confirmExit()" class="bg-red-50 text-red-600 px-6 py-2 rounded-full font-bold hover:bg-red-100 transition border border-red-100 shadow-sm">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Thoát
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-morphism p-6 md:p-10">
+                <div class="game-card-container">
+                    <div class="side-panel">
+                        <h3 class="text-xl font-bold text-blue-800 mb-6 flex items-center gap-2 border-b border-blue-50 pb-2">
+                            <i class="fas fa-hand-pointer"></i> 1. Kéo phép tính
+                        </h3>
+                        <div id="question-container" class="flex flex-col gap-4">
+                            <!-- Draggable items here -->
+                        </div>
+                    </div>
+
+                    <div class="grid-panel">
+                        <h3 class="text-xl font-bold text-blue-800 mb-6 self-start flex items-center gap-2 border-b border-blue-50 pb-2 w-full">
+                            <i class="fas fa-bullseye"></i> 2. Ô chứa kết quả
+                        </h3>
+                        <div id="answer-container" class="grid grid-cols-2 xl:grid-cols-3 gap-6 w-full">
+                            <!-- Drop zones here -->
+                        </div>
+
+                        <div id="finish-action-container" class="hidden mt-auto pt-10 w-full flex justify-center">
+                            <button onclick="showFinalResult()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-16 rounded-2xl shadow-lg transition-all transform hover:scale-105 text-2xl animate-bounce">
+                                XEM KẾT QUẢ <i class="fas fa-check-circle ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÀN HÌNH KẾT QUẢ -->
+        <section id="result-screen" class="hidden glass-morphism p-12 text-center max-w-3xl mx-auto w-full mt-6 shadow-2xl animate-pop">
+            <div id="result-icon" class="text-9xl mb-8 text-yellow-500">
+                <i class="fas fa-crown animate-bounce"></i>
+            </div>
+            <h2 id="result-title" class="text-5xl font-bold text-gray-800 mb-3 font-black tracking-tight">Tuyệt đỉnh thông thái!</h2>
+            <div id="victory-tag" class="hidden mb-6 py-2 px-8 bg-yellow-100 text-yellow-700 rounded-full font-bold text-xl inline-block border border-yellow-200 shadow-sm">
+                CHÚC MỪNG: <span id="victory-group-name"></span>
+            </div>
+            <p id="result-message" class="text-gray-600 mb-10 text-xl font-medium leading-relaxed"></p>
+            
+            <div class="max-w-sm mx-auto mb-10">
+                <div class="bg-blue-50 p-8 rounded-3xl border-2 border-blue-100 shadow-inner">
+                    <p class="text-base text-blue-500 font-bold uppercase tracking-widest mb-2">Kết quả thử thách</p>
+                    <p id="final-score" class="text-7xl font-black text-blue-700">0</p>
+                </div>
+            </div>
+
+            <button onclick="restartApp()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-16 rounded-2xl transition transform hover:scale-105 shadow-lg text-xl uppercase tracking-wider">
+                <i class="fas fa-redo mr-3"></i> Quay lại phòng chờ
+            </button>
+        </section>
+
+        <!-- FOOTER -->
+        <footer id="app-footer" class="py-10 text-center mt-auto">
+            <p class="text-blue-800 font-bold opacity-80 text-xl tracking-wide">
+                <i class="fas fa-copyright mr-2"></i> Bản quyền thuộc về Nhật Huy
+            </p>
+        </footer>
+
+    </div>
+
+    <!-- Audio assets -->
+    <audio id="snd-correct" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
+    <audio id="snd-wrong" src="https://assets.mixkit.co/active_storage/sfx/2015/2015-preview.mp3"></audio>
+    <audio id="snd-drag" src="https://assets.mixkit.co/active_storage/sfx/2004/2004-preview.mp3"></audio>
+
+    <script>
+        // --- State ---
+        let groups = [];
+        let allSets = [];
+        let selectedGroup = null;
+        let selectedSet = null;
+        let currentScore = 0;
+        let isMuted = false;
+
+        const audio = {
+            correct: document.getElementById('snd-correct'),
+            wrong: document.getElementById('snd-wrong'),
+            drag: document.getElementById('snd-drag')
+        };
+
+        function playSound(name) {
+            if (isMuted) return;
+            audio[name].currentTime = 0;
+            audio[name].play().catch(() => {});
+        }
+
+        document.getElementById('toggle-sound').addEventListener('click', () => {
+            isMuted = !isMuted;
+            document.getElementById('toggle-sound').innerHTML = isMuted ? 
+                '<i class="fas fa-volume-mute text-red-500"></i>' : 
+                '<i class="fas fa-volume-up text-blue-500"></i>';
+        });
+
+        // --- Setup Logic ---
+        function addNewSetInput() {
+            const container = document.getElementById('sets-container');
+            const count = container.querySelectorAll('.set-input-block').length + 1;
+            const div = document.createElement('div');
+            div.className = 'set-input-block p-4 bg-white rounded-2xl border-2 border-blue-50 relative animate-pop';
+            div.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-red-300 hover:text-red-500"><i class="fas fa-times-circle"></i></button>
+                <input type="text" class="set-title w-full font-bold text-blue-600 mb-2 border-b border-dashed outline-none" value="Bộ câu hỏi số ${count}">
+                <textarea class="set-questions w-full h-32 p-2 text-sm border-none focus:ring-0 outline-none" placeholder="Câu hỏi | Đáp án..."></textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        function initApp() {
+            const gText = document.getElementById('group-input').value.trim();
+            groups = gText ? gText.split('\n').map(s => s.trim()).filter(s => s) : [];
+
+            const setBlocks = document.querySelectorAll('.set-input-block');
+            allSets = [];
+            setBlocks.forEach(block => {
+                const title = block.querySelector('.set-title').value.trim();
+                const content = block.querySelector('.set-questions').value.trim();
+                const questions = [];
+                content.split('\n').forEach((line) => {
+                    const parts = line.split('|').map(s => s.trim());
+                    if (parts.length >= 2) {
+                        questions.push({ q: parts[0], a: parts[1] });
+                    }
+                });
+                if (questions.length > 0) {
+                    allSets.push({ title, questions });
+                }
+            });
+
+            if (allSets.length === 0) {
+                return Swal.fire('Lỗi', 'Vui lòng nhập ít nhất một bộ câu hỏi hợp lệ.', 'error');
+            }
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('picker-screen').classList.remove('hidden');
+
+            if (groups.length > 0) {
+                document.getElementById('group-picker-zone').classList.remove('hidden');
+                document.getElementById('set-picker-zone').classList.add('hidden');
+                resetGroupPickerUI();
+            } else {
+                selectedGroup = null;
+                showSetSelection();
+            }
+        }
+
+        function resetGroupPickerUI() {
+            const display = document.getElementById('group-display');
+            display.innerText = "Đang chờ...";
+            display.classList.remove('border-blue-500', 'bg-blue-100', 'animate-bounce');
+            document.getElementById('btn-random-group').classList.remove('hidden');
+        }
+
+        // --- Picker Logic ---
+        function pickRandomGroup() {
+            const display = document.getElementById('group-display');
+            const btn = document.getElementById('btn-random-group');
+            btn.classList.add('hidden');
+            
+            let counter = 0;
+            const interval = setInterval(() => {
+                display.innerText = groups[counter % groups.length];
+                display.style.filter = `hue-rotate(${counter * 20}deg)`;
+                counter++;
+                if (counter > 30) {
+                    clearInterval(interval);
+                    const winnerIndex = Math.floor(Math.random() * groups.length);
+                    selectedGroup = groups[winnerIndex];
+                    display.innerText = "🎯 " + selectedGroup;
+                    display.style.filter = "none";
+                    display.classList.add('border-blue-500', 'bg-blue-100', 'animate-bounce');
+                    playSound('correct');
+                    
+                    setTimeout(() => {
+                        showSetSelection();
+                    }, 1500);
+                }
+            }, 80);
+        }
+
+        function showSetSelection() {
+            document.getElementById('group-picker-zone').classList.add('hidden');
+            document.getElementById('set-picker-zone').classList.remove('hidden');
+            
+            if (selectedGroup) {
+                document.getElementById('chosen-group-name').innerText = selectedGroup;
+            } else {
+                document.getElementById('chosen-group-name').parentElement.innerText = "Chọn thử thách của bạn:";
+            }
+
+            const listDisplay = document.getElementById('set-list-display');
+            listDisplay.innerHTML = '';
+            
+            allSets.forEach((set, idx) => {
+                const card = document.createElement('div');
+                card.className = 'set-card glass-morphism p-6 text-center border-2 border-transparent';
+                card.innerHTML = `
+                    <div class="text-3xl text-blue-500 mb-2"><i class="fas fa-folder-open"></i></div>
+                    <h4 class="font-bold text-gray-800">${set.title}</h4>
+                    <p class="text-xs text-gray-400 mt-1">${set.questions.length} thử thách</p>
+                `;
+                card.onclick = () => launchGame(idx);
+                listDisplay.appendChild(card);
+            });
+        }
+
+        // --- Game Logic ---
+        function launchGame(setIndex) {
+            selectedSet = allSets[setIndex];
+            currentScore = 0;
+
+            document.getElementById('picker-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            document.getElementById('active-group-tag').innerText = selectedGroup || "Cá nhân";
+            document.getElementById('active-set-tag').innerText = selectedSet.title;
+            document.getElementById('total-display').innerText = selectedSet.questions.length;
+            document.getElementById('score-display').innerText = "0";
+            document.getElementById('finish-action-container').classList.add('hidden');
+
+            renderGameLayout();
+        }
+
+        function renderGameLayout() {
+            const qContainer = document.getElementById('question-container');
+            const aContainer = document.getElementById('answer-container');
+            qContainer.innerHTML = '';
+            aContainer.innerHTML = '';
+
+            // Render Zones (Shuffled Answers)
+            const uniqueAnswers = [...new Set(selectedSet.questions.map(i => i.a))].sort(() => Math.random() - 0.5);
+            uniqueAnswers.forEach(ans => {
+                const zone = document.createElement('div');
+                zone.className = 'drop-zone bg-white flex flex-col items-center justify-center p-4 hover:shadow-inner';
+                zone.dataset.answer = ans;
+                zone.innerHTML = `<span class="text-4xl font-black text-blue-600">${ans}</span>`;
+                
+                zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', handleDrop);
+                aContainer.appendChild(zone);
+            });
+
+            // Render Questions (Shuffled Questions)
+            const shuffledQ = [...selectedSet.questions].sort(() => Math.random() - 0.5);
+            shuffledQ.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'drag-item bg-white p-6 rounded-2xl shadow-sm font-bold text-xl text-gray-700 text-center select-none border-b-4 border-blue-100 hover:border-blue-300';
+                card.innerText = item.q;
+                card.draggable = true;
+                card.dataset.answer = item.a;
+
+                card.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', item.a);
+                    card.style.opacity = '0.4';
+                    playSound('drag');
+                });
+                card.addEventListener('dragend', () => card.style.opacity = '1');
+                card.addEventListener('touchstart', handleTouchStart, {passive: false});
+
+                qContainer.appendChild(card);
+            });
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const zone = e.currentTarget;
+            zone.classList.remove('drag-over');
+            const expected = zone.dataset.answer;
+            const dragged = e.dataTransfer.getData('text/plain');
+
+            const card = Array.from(document.getElementById('question-container').children).find(c => 
+                !c.classList.contains('hidden') && c.dataset.answer === dragged
+            );
+
+            if (dragged === expected && card) {
+                handleCorrect(card, zone);
+            } else {
+                handleWrong(zone);
+            }
+        }
+
+        function handleCorrect(card, zone) {
+            playSound('correct');
+            currentScore++;
+            document.getElementById('score-display').innerText = currentScore;
+            
+            card.classList.add('hidden');
+            const badge = document.createElement('div');
+            badge.className = 'bg-green-500 text-white px-4 py-1 rounded-full text-sm mt-3 font-bold shadow-sm animate-pop';
+            badge.innerHTML = `<i class="fas fa-check-circle mr-1"></i> ${card.innerText}`;
+            zone.appendChild(badge);
+
+            if (currentScore === selectedSet.questions.length) {
+                document.getElementById('finish-action-container').classList.remove('hidden');
+                document.getElementById('finish-action-container').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function handleWrong(zone) {
+            playSound('wrong');
+            zone.classList.add('wrong');
+            setTimeout(() => zone.classList.remove('wrong'), 500);
+        }
+
+        function showFinalResult() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('app-header').classList.add('hidden');
+            
+            const total = selectedSet.questions.length;
+            document.getElementById('final-score').innerText = `${currentScore}/${total}`;
+
+            const title = document.getElementById('result-title');
+            const msg = document.getElementById('result-message');
+            const icon = document.getElementById('result-icon');
+            const victoryTag = document.getElementById('victory-tag');
+
+            if (selectedGroup) {
+                victoryTag.classList.remove('hidden');
+                document.getElementById('victory-group-name').innerText = selectedGroup;
+            } else {
+                victoryTag.classList.add('hidden');
+            }
+
+            if (currentScore === total) {
+                title.innerText = "Tuyệt đỉnh thông thái!";
+                msg.innerText = "Thử thách đã được chinh phục hoàn toàn. Các bạn thật xuất sắc!";
+                icon.innerHTML = '<i class="fas fa-crown animate-bounce"></i>';
+                icon.className = "text-9xl mb-8 text-yellow-500";
+                confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+            } else {
+                title.innerText = "Hoàn thành thử thách!";
+                msg.innerText = "Kết quả rất ấn tượng! Hãy tiếp tục rèn luyện để giỏi hơn nữa nhé.";
+                icon.innerHTML = '<i class="fas fa-medal"></i>';
+                icon.className = "text-9xl mb-8 text-blue-400";
+            }
+        }
+
+        function confirmExit() {
+            Swal.fire({
+                title: 'Thoát thử thách?',
+                text: "Tiến trình hiện tại sẽ bị mất!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Đồng ý',
+                cancelButtonText: 'Ở lại'
+            }).then((result) => {
+                if (result.isConfirmed) restartApp();
+            });
+        }
+
+        function restartApp() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('app-header').classList.remove('hidden');
+            document.getElementById('picker-screen').classList.remove('hidden');
+            resetLobbyState();
+        }
+
+        function resetLobbyState() {
+            if (groups.length > 0) {
+                document.getElementById('group-picker-zone').classList.remove('hidden');
+                document.getElementById('set-picker-zone').classList.add('hidden');
+                resetGroupPickerUI();
+            } else {
+                showSetSelection();
+            }
+        }
+
+        // --- Touch Support ---
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const card = e.currentTarget;
+            if (card.classList.contains('hidden')) return;
+            playSound('drag');
+            const rect = card.getBoundingClientRect();
+            const shiftX = e.touches[0].clientX - rect.left;
+            const shiftY = e.touches[0].clientY - rect.top;
+
+            function onTouchMove(moveEv) {
+                const touch = moveEv.touches[0];
+                card.style.position = 'fixed';
+                card.style.zIndex = '1000';
+                card.style.pointerEvents = 'none';
+                card.style.left = (touch.clientX - shiftX) + 'px';
+                card.style.top = (touch.clientY - shiftY) + 'px';
+            }
+
+            function onTouchEnd(endEv) {
+                const touch = endEv.changedTouches[0];
+                card.style.display = 'none';
+                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+                card.style.display = '';
+                const zone = dropTarget?.closest('.drop-zone');
+                card.style.position = ''; card.style.zIndex = ''; card.style.pointerEvents = ''; card.style.left = ''; card.style.top = '';
+
+                if (zone) {
+                    if (card.dataset.answer === zone.dataset.answer) {
+                        handleCorrect(card, zone);
+                    } else {
+                        handleWrong(zone);
+                    }
+                }
+                document.removeEventListener('touchmove', onTouchMove);
+                document.removeEventListener('touchend', onTouchEnd);
+            }
+            document.addEventListener('touchmove', onTouchMove, {passive: false});
+            document.addEventListener('touchend', onTouchEnd);
+        }
+    </script>
+</body>
+</html>
