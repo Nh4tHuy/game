@@ -51,20 +51,22 @@
 
     <div id="lock-screen">
         <div class="card">
-            <h2>Kích Hoạt Ứng Dụng</h2>
-            <p>Vui lòng gửi mã ID máy bên dưới cho quản trị viên để nhận Key.</p>
+            <p>Vui lòng gửi mã ID bên dưới cho quản trị viên để nhận Key.</p>
             
             <div class="id-box">
                 <span id="display-id">......</span>
                 <button class="copy-btn" onclick="copyId()">Copy</button>
             </div>
-<span class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md">CHƠI NGAY</span>
-            <input type="text" id="key-input" placeholder="Nhập mã Key (VD: 1234)">
-            <button class="copy-btn" onclick="checkLicense()">Kích Hoạt Ngay</button>
+            <input type="text" id="key-input" placeholder="Nhập mã Key (VD: )">
+           <span class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-md onclick="checkLicense()">Kích Hoạt Ngay</span>
             <p id="msg"></p>
         </div>
     </div>
-
+ <footer id="app-footer" class="py-10 text-center mt-auto">
+            <p class="text-blue-800 font-bold opacity-80 text-xl tracking-wide">
+                <i class="fas fa-copyright mr-2"></i> Bản quyền thuộc về Nhật Huy
+            </p>
+        </footer>
     <div id="main-content" class="hidden">
        <!DOCTYPE html>
 <html lang="vi">
@@ -621,7 +623,7 @@
                     showContent();
                 } else {
                     msg.style.color = "red";
-                    msg.innerText = "Key không hợp lệ cho máy này. Vui lòng mua key mới!";
+                    msg.innerText = "Key không hợp lệ. Vui lòng liên hệ Admin để nhận !";
                 }
             } catch (error) {
                 msg.style.color = "red";
@@ -637,5 +639,6 @@
     </script>
 </body>
 </html>
+
 
 
