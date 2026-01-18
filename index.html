@@ -126,7 +126,8 @@
                 <span id="display-id">......</span>
                 <button style="cursor:pointer; border:none; background:none; color:var(--primary); font-weight:600;" onclick="copyId()">Copy</button>
             </div>
-
+            
+            <label for="key-input">Mã kích hoạt (License Key)</label>
             <input type="text" id="key-input" placeholder="Nhập License Key...">
             <button class="btn-activate" onclick="checkLicense()">Kích Hoạt Hệ Thống</button>
             <p id="msg" style="margin-top:12px; font-size:0.85rem;"></p>
@@ -153,7 +154,7 @@
         };
 
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzz3sX1jrj4xUzqBE-oT29Aa3ScUDwEpyFSNS3LVWFs9fVvxtr479ZAMD2aKDZc7h5Qtw/exec";
-        const APP_URL = "https://prompt-game-ung-dung-giao-duc.netlify.app/";
+        const APP_URL = "https://sparkly-sundae-678f93.netlify.app/";
 
         function getDeviceId() {
             let id = localStorage.getItem('device_id');
@@ -206,3 +207,4 @@
     </script>
 </body>
 </html>
+
