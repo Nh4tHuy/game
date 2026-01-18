@@ -2,86 +2,192 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phần Mềm Bản Quyền</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kích Hoạt Bản Quyền - Hệ Thống Ứng Dụng</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --primary-color: #2563eb; --error-color: #dc2626; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f3f4f6; }
-        
-        /* Màn hình khóa */
-        #lock-screen { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: white; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; z-index: 9999; 
-        }
-        
-        .card {
-            background: white; padding: 2rem; border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 90%;
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-gray: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
         }
 
-        .id-box { 
-            background: #e5e7eb; padding: 10px; border-radius: 6px; 
-            font-weight: bold; font-size: 1.2rem; letter-spacing: 2px;
-            margin: 1rem 0; display: flex; justify-content: center; align-items: center; gap: 10px;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-gray);
+            color: var(--text-main);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* Ngăn cuộn trang web chính */
         }
+
+        /* MÀN HÌNH KHÓA */
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            text-align: center;
+            max-width: 440px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        h2 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #0f172a; }
+        p.desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+        .id-container {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            border: 1px dashed #cbd5e1;
+        }
+
+        #display-id {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary);
+            letter-spacing: 2px;
+        }
+
+        .btn-copy {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
+
+        .input-group { text-align: left; margin-bottom: 1rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: #475569; }
 
         input[type="text"] {
-            width: 100%; padding: 12px; margin-bottom: 1rem;
-            border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        .btn-activate {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            margin-top: 0.5rem;
+        }
+        .btn-activate:hover { background: var(--primary-hover); }
+
+        #msg { margin-top: 1rem; font-size: 0.9rem; font-weight: 500; min-height: 20px; }
+
+        /* FOOTER */
+        .footer {
+            position: absolute;
+            bottom: 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
         }
 
-        button {
-            width: 100%; padding: 12px; border: none; border-radius: 6px;
-            background: var(--primary-color); color: white; cursor: pointer; font-weight: bold;
+        /* NỘI DUNG CHÍNH - IFRAME FULLSCREEN */
+        #main-content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: white;
+            z-index: 1;
         }
 
-        button:hover { opacity: 0.9; }
-        
-        .copy-btn { background: #6b7280; width: auto; padding: 5px 10px; font-size: 0.8rem; }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
 
-        #msg { color: var(--error-color); margin-top: 10px; font-size: 0.9rem; }
         .hidden { display: none !important; }
-
-        /* Nội dung chính */
-        #main-content { padding: 2rem; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="lock-screen">
         <div class="card">
-            <p>Vui lòng gửi mã ID bên dưới cho quản trị viên để nhận Key.</p>
+            <h2>Kích Hoạt Ứng Dụng</h2>
+            <p class="desc">Vui lòng gửi mã ID bên dưới cho Quản trị viên để nhận Key kích hoạt.</p>
             
-            <div class="id-box">
+            <div class="id-container">
                 <span id="display-id">......</span>
-                <button class="copy-btn" onclick="copyId()">Copy</button>
+                <button class="btn-copy" onclick="copyId()">Sao chép mã</button>
             </div>
-            <input type="text" id="key-input" placeholder="Nhập mã Key (VD: Wiky123)">
-          <button class="copy-btn" onclick="checkLicense()">Kích Hoạt Ngay</button>
+
+            <div class="input-group">
+                <label for="key-input">Mã kích hoạt (License Key)</label>
+                <input type="text" id="key-input" placeholder="Nhập mã Key của bạn...">
+            </div>
+
+            <button class="btn-activate" onclick="checkLicense()">Kích Hoạt Ngay</button>
             <p id="msg"></p>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Bản quyền thuộc về <strong>Thầy Quân</strong></p>
+            <p style="margin-top: 4px; opacity: 0.7;">Hệ thống xác thực bản quyền tự động</p>
         </div>
     </div>
 
     <div id="main-content" class="hidden">
-      <div class="flex-1">
-                    <iframe src="https://prompt-game-ung-dung-giao-duc.netlify.app/" class="w-full h-full border-0"></iframe>
-                </div>
+        <iframe id="app-frame" src="about:blank"></iframe>
     </div>
 
     <script>
-        // THAY LINK WEB APP CỦA BẠN VÀO ĐÂY
+        // CẤU HÌNH
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzz3sX1jrj4xUzqBE-oT29Aa3ScUDwEpyFSNS3LVWFs9fVvxtr479ZAMD2aKDZc7h5Qtw/exec";
+        const APP_URL = "https://prompt-game-ung-dung-giao-duc.netlify.app/";
 
-        // 1. Tạo hoặc lấy ID máy (6 ký tự in hoa)
+        // 1. Quản lý Device ID
         function getDeviceId() {
             let id = localStorage.getItem('device_id');
             if (!id) {
-                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                id = '';
-                for (let i = 0; i < 6; i++) {
-                    id += chars.charAt(Math.floor(Math.random() * chars.length));
-                }
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Loại bỏ 0, O, 1, I để tránh nhầm lẫn
+                id = Array.from({length: 6}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
                 localStorage.setItem('device_id', id);
             }
             return id;
@@ -90,34 +196,36 @@
         const deviceId = getDeviceId();
         document.getElementById('display-id').innerText = deviceId;
 
-        // 2. Kiểm tra trạng thái đã kích hoạt chưa khi vừa mở trang
+        // 2. Kiểm tra trạng thái khi tải trang
         window.onload = function() {
             if (localStorage.getItem('is_activated') === 'true') {
                 showContent();
             }
         };
 
-        // 3. Hàm copy ID
+        // 3. Sao chép ID
         function copyId() {
             navigator.clipboard.writeText(deviceId);
-            alert("Đã copy ID: " + deviceId);
+            const btn = document.querySelector('.btn-copy');
+            btn.innerText = "Đã chép!";
+            setTimeout(() => btn.innerText = "Sao chép mã", 2000);
         }
 
-        // 4. Hàm xác thực Key với Google Sheet
+        // 4. Xác thực Key
         async function checkLicense() {
             const key = document.getElementById('key-input').value.trim();
             const msg = document.getElementById('msg');
             
             if (!key) {
-                msg.innerText = "Vui lòng nhập Key!";
+                msg.style.color = "#dc2626";
+                msg.innerText = "⚠️ Vui lòng nhập mã Key!";
                 return;
             }
 
-            msg.style.color = "blue";
-            msg.innerText = "Đang xác thực...";
+            msg.style.color = "#2563eb";
+            msg.innerText = "Đang xác thực hệ thống...";
 
             try {
-                // Gọi tới Google Apps Script
                 const response = await fetch(`${SCRIPT_URL}?id=${deviceId}&key=${key}`);
                 const result = await response.text();
 
@@ -125,29 +233,31 @@
                     localStorage.setItem('is_activated', 'true');
                     showContent();
                 } else {
-                    msg.style.color = "red";
-                    msg.innerText = "Key không hợp lệ. Vui lòng liên hệ Admin để nhận !";
+                    msg.style.color = "#dc2626";
+                    msg.innerText = "❌ Key không hợp lệ hoặc đã hết hạn!";
                 }
             } catch (error) {
-                msg.style.color = "red";
-                msg.innerText = "Lỗi kết nối. Vui lòng kiểm tra Internet!";
+                msg.style.color = "#dc2626";
+                msg.innerText = "⚠️ Lỗi kết nối. Vui lòng thử lại sau!";
             }
         }
 
-        // 5. Hàm hiển thị nội dung chính
+        // 5. Hiển thị nội dung
         function showContent() {
-            document.getElementById('lock-screen').classList.add('hidden');
-            document.getElementById('main-content').classList.remove('hidden');
+            const lockScreen = document.getElementById('lock-screen');
+            const mainContent = document.getElementById('main-content');
+            const iframe = document.getElementById('app-frame');
+
+            // Hiệu ứng mờ dần trước khi chuyển
+            lockScreen.style.transition = "opacity 0.5s ease";
+            lockScreen.style.opacity = "0";
+            
+            setTimeout(() => {
+                lockScreen.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                iframe.src = APP_URL; // Chỉ load iframe khi đã kích hoạt để tiết kiệm tài nguyên
+            }, 500);
         }
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
