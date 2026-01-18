@@ -16,22 +16,21 @@
             --text-muted: #64748b;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; } /* Chống bôi đen văn bản */
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-gray);
-            color: var(--text-main);
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* Ngăn cuộn trang web chính */
+            overflow: hidden;
         }
 
         /* MÀN HÌNH KHÓA */
         #lock-screen {
             position: fixed;
             inset: 0;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -44,60 +43,39 @@
             background: white;
             padding: 2.5rem;
             border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
             text-align: center;
             max-width: 440px;
             width: 100%;
-            border: 1px solid rgba(255, 255, 255, 0.7);
+            border: 1px solid #e2e8f0;
         }
 
-        h2 { font-size: 1.5rem; margin-bottom: 0.5rem; color: #0f172a; }
-        p.desc { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
-
         .id-container {
-            background: #f1f5f9;
+            background: #f8fafc;
             padding: 12px 16px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.5rem;
+            margin: 1.5rem 0;
             border: 1px dashed #cbd5e1;
         }
 
         #display-id {
-            font-family: 'Courier New', Courier, monospace;
+            font-family: monospace;
             font-weight: 700;
             font-size: 1.2rem;
             color: var(--primary);
-            letter-spacing: 2px;
         }
-
-        .btn-copy {
-            background: white;
-            border: 1px solid #e2e8f0;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-copy:hover { background: #f8fafc; border-color: var(--primary); color: var(--primary); }
-
-        .input-group { text-align: left; margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: #475569; }
 
         input[type="text"] {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px;
             border: 2px solid #e2e8f0;
             border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.2s;
             outline: none;
+            user-select: text; /* Cho phép nhập liệu */
         }
-        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
 
         .btn-activate {
             width: 100%;
@@ -106,17 +84,12 @@
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
-            transition: background 0.2s ease;
-            margin-top: 0.5rem;
+            margin-top: 1rem;
         }
-        .btn-activate:hover { background: var(--primary-hover); }
 
-        #msg { margin-top: 1rem; font-size: 0.9rem; font-weight: 500; min-height: 20px; }
-
-        /* FOOTER */
+        /* FOOTER BẢN QUYỀN */
         .footer {
             position: absolute;
             bottom: 2rem;
@@ -125,14 +98,13 @@
             font-size: 0.85rem;
         }
 
-        /* NỘI DUNG CHÍNH - IFRAME FULLSCREEN */
+        /* IFRAME FULLSCREEN */
         #main-content {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: white;
             z-index: 1;
         }
 
@@ -140,36 +112,29 @@
             width: 100%;
             height: 100%;
             border: none;
-            display: block;
         }
 
         .hidden { display: none !important; }
     </style>
 </head>
-<body>
-
-    <div id="lock-screen">
+<body oncontextmenu="return false;"> <div id="lock-screen">
         <div class="card">
-            <h2>Kích Hoạt Ứng Dụng</h2>
-            <p class="desc">Vui lòng gửi mã ID bên dưới cho Quản trị viên để nhận Key kích hoạt.</p>
+            <h2 style="margin-bottom: 8px;">Kích Hoạt Ứng Dụng</h2>
+            <p style="font-size: 0.9rem; color: #64748b;">Vui lòng liên hệ Admin để nhận Key kích hoạt.</p>
             
             <div class="id-container">
                 <span id="display-id">......</span>
-                <button class="btn-copy" onclick="copyId()">Sao chép mã</button>
+                <button style="cursor:pointer; border:none; background:none; color:var(--primary); font-weight:600;" onclick="copyId()">Copy</button>
             </div>
 
-            <div class="input-group">
-                <label for="key-input">Mã kích hoạt (License Key)</label>
-                <input type="text" id="key-input" placeholder="Nhập mã Key của bạn...">
-            </div>
-
-            <button class="btn-activate" onclick="checkLicense()">Kích Hoạt Ngay</button>
-            <p id="msg"></p>
+            <input type="text" id="key-input" placeholder="Nhập License Key...">
+            <button class="btn-activate" onclick="checkLicense()">Kích Hoạt Hệ Thống</button>
+            <p id="msg" style="margin-top:12px; font-size:0.85rem;"></p>
         </div>
 
         <div class="footer">
-            <p>© 2026 Bản quyền thuộc về <strong>Thầy Quân</strong></p>
-            <p style="margin-top: 4px; opacity: 0.7;">Hệ thống xác thực bản quyền tự động</p>
+            <p>© 2026 Bản quyền thuộc về <strong>Nhật Huy</strong></p>
+            <p style="opacity: 0.6; margin-top: 4px;">Protected by SecureScript</p>
         </div>
     </div>
 
@@ -178,85 +143,65 @@
     </div>
 
     <script>
-        // CẤU HÌNH
+        // CHỐNG COPPY & F12
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123 || 
+                (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) || 
+                (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0))) {
+                return false;
+            }
+        };
+
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzz3sX1jrj4xUzqBE-oT29Aa3ScUDwEpyFSNS3LVWFs9fVvxtr479ZAMD2aKDZc7h5Qtw/exec";
         const APP_URL = "https://prompt-game-ung-dung-giao-duc.netlify.app/";
 
-        // 1. Quản lý Device ID
         function getDeviceId() {
             let id = localStorage.getItem('device_id');
             if (!id) {
-                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Loại bỏ 0, O, 1, I để tránh nhầm lẫn
-                id = Array.from({length: 6}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+                id = Math.random().toString(36).substring(2, 8).toUpperCase();
                 localStorage.setItem('device_id', id);
             }
             return id;
         }
 
-        const deviceId = getDeviceId();
-        document.getElementById('display-id').innerText = deviceId;
+        document.getElementById('display-id').innerText = getDeviceId();
 
-        // 2. Kiểm tra trạng thái khi tải trang
         window.onload = function() {
-            if (localStorage.getItem('is_activated') === 'true') {
-                showContent();
-            }
+            if (localStorage.getItem('is_activated') === 'true') showContent();
         };
 
-        // 3. Sao chép ID
         function copyId() {
-            navigator.clipboard.writeText(deviceId);
-            const btn = document.querySelector('.btn-copy');
-            btn.innerText = "Đã chép!";
-            setTimeout(() => btn.innerText = "Sao chép mã", 2000);
+            navigator.clipboard.writeText(localStorage.getItem('device_id'));
+            alert("Đã sao chép mã ID!");
         }
 
-        // 4. Xác thực Key
         async function checkLicense() {
             const key = document.getElementById('key-input').value.trim();
             const msg = document.getElementById('msg');
+            const devId = localStorage.getItem('device_id');
             
-            if (!key) {
-                msg.style.color = "#dc2626";
-                msg.innerText = "⚠️ Vui lòng nhập mã Key!";
-                return;
-            }
-
-            msg.style.color = "#2563eb";
-            msg.innerText = "Đang xác thực hệ thống...";
+            if (!key) return;
+            msg.innerText = "Đang kiểm tra...";
 
             try {
-                const response = await fetch(`${SCRIPT_URL}?id=${deviceId}&key=${key}`);
+                const response = await fetch(`${SCRIPT_URL}?id=${devId}&key=${key}`);
                 const result = await response.text();
-
                 if (result === "valid") {
                     localStorage.setItem('is_activated', 'true');
                     showContent();
                 } else {
-                    msg.style.color = "#dc2626";
-                    msg.innerText = "❌ Key không hợp lệ hoặc đã hết hạn!";
+                    msg.style.color = "red";
+                    msg.innerText = "Key không chính xác!";
                 }
-            } catch (error) {
-                msg.style.color = "#dc2626";
-                msg.innerText = "⚠️ Lỗi kết nối. Vui lòng thử lại sau!";
+            } catch (e) {
+                msg.innerText = "Lỗi kết nối!";
             }
         }
 
-        // 5. Hiển thị nội dung
         function showContent() {
-            const lockScreen = document.getElementById('lock-screen');
-            const mainContent = document.getElementById('main-content');
-            const iframe = document.getElementById('app-frame');
-
-            // Hiệu ứng mờ dần trước khi chuyển
-            lockScreen.style.transition = "opacity 0.5s ease";
-            lockScreen.style.opacity = "0";
-            
-            setTimeout(() => {
-                lockScreen.classList.add('hidden');
-                mainContent.classList.remove('hidden');
-                iframe.src = APP_URL; // Chỉ load iframe khi đã kích hoạt để tiết kiệm tài nguyên
-            }, 500);
+            document.getElementById('lock-screen').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('app-frame').src = APP_URL;
         }
     </script>
 </body>
