@@ -647,7 +647,7 @@
 
             container.innerHTML = tempQuestions.map((q, i) => {
                 // LOGIC FIX: Auto-normalize keys for each type to prevent "No correct answer" errors
-                if (type === 'quiz' && !['A','B','C','D'].includes(q.key)) q.key = 'A';
+                if (type === 'quiz' && !['A','B','C','D'].includes(q.key)) q.key = '';
                 if (type === 'dungsai' && !['1','2'].includes(q.key)) q.key = '1';
 
                 let inputHtml = '';
@@ -965,3 +965,4 @@
     </script>
 </body>
 </html>
+
